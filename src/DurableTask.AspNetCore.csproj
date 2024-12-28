@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Copyright>Pejman Nikram</Copyright>
+		<PackageTags>Azure;Durable;Orchestration;Workflow;Asp;c#</PackageTags>
+		<AssemblyName>Sisu.$(MSBuildProjectName)</AssemblyName>
+		<Title>Self-Hosted Durable Task Worker</Title>
+		<Authors>PejmanNik</Authors>
+		<Description>running DurableTask worker as self-hosted in asp .net core</Description>
+		<PackageProjectUrl>https://github.com/PejmanNik/durabletask-dotnet-aspnet</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/PejmanNik/durabletask-dotnet-aspnet</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>git</RepositoryType>
+		<Version>0.0.1</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.DurableTask.Client" Version="1.5.0" />
+		<PackageReference Include="Microsoft.DurableTask.Client.Grpc" Version="1.5.0" />
+		<PackageReference Include="Microsoft.DurableTask.Worker" Version="1.5.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="DurableTask.AspNetCore.Tests" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+</Project>

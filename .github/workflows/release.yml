@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:  
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.x"
+      - name: Build
+        run: dotnet build
+      - name: Test with the dotnet CLI
+        run: dotnet test
+      - name: build app
+        run: dotnet pack src/DurableTask.AspNetCore.csproj -c Release -o ./publish/
+      - name: Nuget Push
+        run: dotnet nuget push ./publish/*.nupkg -k ${{ secrets.NUGET_TOKEN }} -s https://api.nuget.org/v3/index.json --skip-duplicate
