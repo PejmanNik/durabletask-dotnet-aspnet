@@ -1,7 +1,9 @@
 ﻿using DurableTask.AspNetCore.Extensions;
 using DurableTask.Core;
+using DurableTask.Core.Entities;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
+using Microsoft.DurableTask.Client.Entities;
 using Microsoft.Extensions.Options;
 
 
@@ -12,6 +14,7 @@ internal sealed class SelfHostedDurableTaskClient : DurableTaskClient
 {
     private readonly TaskHubClient client;
     private readonly DurableTaskClientOptions options;
+    private SelfHostedDurableEntityClient? entities;
 
     public SelfHostedDurableTaskClient(string name, TaskHubClient client, IOptions<DurableTaskClientOptions> options) : base(name)
     {
@@ -19,18 +22,39 @@ internal sealed class SelfHostedDurableTaskClient : DurableTaskClient
         this.options = options.Value;
     }
 
+    public override DurableEntityClient Entities
+    {
+        get
+        {
+            if (entities is not null)
+            {
+                return entities;
+            }
+
+            if (!options.EnableEntitySupport)
+            {
+                throw new InvalidOperationException("Entity support is not enabled.");
+            }
+
+            var entityService = As<IEntityOrchestrationService>();
+            if (entityService.EntityBackendQueries is null)
+            {
+                throw new InvalidOperationException("The configured IOrchestrationServiceClient does not support entities.");
+            }
+
+            entities = new SelfHostedDurableEntityClient(client.ServiceClient, entityService.EntityBackendQueries, options.DataConverter, Name);
+            return entities;
+        }
+    }
+
     public override AsyncPageable<OrchestrationMetadata> GetAllInstancesAsync(OrchestrationQuery? filter = null)
     {
-        if (client.ServiceClient is not Core.Query.IOrchestrationServiceQueryClient queryClient)
-        {
-            throw new NotSupportedException($"Provided IOrchestrationServiceClient does not implement {typeof(Core.Query.IOrchestrationServiceQueryClient)}.");
-        }
-
+        var queryClient = As<Core.Query.IOrchestrationServiceQueryClient>();
         return Pageable.Create(async (continuation, pageSize, cancellation) =>
         {
             var coreQuery = new Core.Query.OrchestrationQuery()
             {
-                RuntimeStatus = filter?.Statuses?.Select(x => x.ToCoreStatus()).ToArray(),
+                RuntimeStatus = filter?.Statuses?.Select(x => x.ToCore()).ToArray(),
                 CreatedTimeFrom = filter?.CreatedFrom?.UtcDateTime,
                 CreatedTimeTo = filter?.CreatedTo?.UtcDateTime,
                 TaskHubNames = filter?.TaskHubNames?.ToList(),
@@ -128,9 +152,39 @@ internal sealed class SelfHostedDurableTaskClient : DurableTaskClient
         return client.TerminateInstanceAsync(CreateOrchestrationInstance(instanceId), reason!);
     }
 
+    public override async Task<Microsoft.DurableTask.Client.PurgeResult> PurgeInstanceAsync(string instanceId, PurgeInstanceOptions? options = null, CancellationToken cancellation = default)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        var result = await As<IOrchestrationServicePurgeClient>().PurgeInstanceStateAsync(instanceId);
+
+        return result.ToExpanded();
+    }
+
+    public override async Task<Microsoft.DurableTask.Client.PurgeResult> PurgeAllInstancesAsync(PurgeInstancesFilter filter, PurgeInstanceOptions? options = null, CancellationToken cancellation = default)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        var result = await As<IOrchestrationServicePurgeClient>().PurgeInstanceStateAsync(new DurableTask.Core.PurgeInstanceFilter(
+            filter.CreatedFrom?.UtcDateTime ?? DateTime.MinValue,
+            filter.CreatedTo?.UtcDateTime,
+            filter.Statuses?.Select(x => x.ToCore()).ToArray()
+        ));
+
+        return result.ToExpanded();
+    }
+
     public override ValueTask DisposeAsync()
     {
         return ValueTask.CompletedTask;
+    }
+
+    private T As<T>()
+    {
+        if (client.ServiceClient is not T t)
+        {
+            throw new NotSupportedException($"Provided IOrchestrationServiceClient does not implement {typeof(T)}.");
+        }
+
+        return t;
     }
 
     private static OrchestrationInstance CreateOrchestrationInstance(string instanceId)
@@ -142,7 +196,7 @@ internal sealed class SelfHostedDurableTaskClient : DurableTaskClient
         {
             CreatedAt = state.CreatedTime,
             LastUpdatedAt = state.LastUpdatedTime,
-            RuntimeStatus = state.OrchestrationStatus.ToRuntimeStatus(),
+            RuntimeStatus = state.OrchestrationStatus.ToExtended(),
             SerializedInput = state.Input,
             SerializedOutput = state.Output,
             SerializedCustomStatus = state.Status,

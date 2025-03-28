@@ -51,7 +51,7 @@ internal sealed class GrillBurgerOrchestrator : TaskOrchestrator<GrillBurgerInpu
         };
 
         var results = await Task.WhenAll(tasks);
-  
+
         // 2. Assemble the Burger
         var burger = await context.CallAssembleBurgerActivityAsync(results);
 

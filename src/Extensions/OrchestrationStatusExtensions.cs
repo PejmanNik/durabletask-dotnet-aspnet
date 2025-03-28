@@ -5,7 +5,7 @@ namespace DurableTask.AspNetCore.Extensions;
 
 internal static class OrchestrationStatusExtensions
 {
-    public static OrchestrationStatus ToCoreStatus(this OrchestrationRuntimeStatus status)
+    public static OrchestrationStatus ToCore(this OrchestrationRuntimeStatus status)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
         return status switch
@@ -23,7 +23,7 @@ internal static class OrchestrationStatusExtensions
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 
-    public static OrchestrationRuntimeStatus ToRuntimeStatus(this OrchestrationStatus status)
+    public static OrchestrationRuntimeStatus ToExtended(this OrchestrationStatus status)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
         return status switch

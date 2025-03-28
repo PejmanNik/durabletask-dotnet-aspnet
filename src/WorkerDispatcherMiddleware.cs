@@ -1,5 +1,7 @@
 ﻿using DurableTask.AspNetCore.Utilize;
 using DurableTask.Core;
+using DurableTask.Core.Entities;
+using DurableTask.Core.Entities.OperationFormat;
 using DurableTask.Core.History;
 using DurableTask.Core.Middleware;
 using Microsoft.DurableTask;
@@ -90,6 +92,7 @@ internal sealed class WorkerDispatcherMiddleware : IWorkerDispatcherMiddleware
             runtimeState,
             taskOrchestration,
             BehaviorOnContinueAsNew.Carryover,
+            context.GetProperty<TaskOrchestrationEntityParameters>(),
             ErrorPropagationMode.UseFailureDetails)
             .Execute();
 

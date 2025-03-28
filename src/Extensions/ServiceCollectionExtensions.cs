@@ -15,27 +15,37 @@ public static class ServiceCollectionExtensions
        TIOrchestrationService orchestrationService
        ) where TIOrchestrationService : IOrchestrationService, IOrchestrationServiceClient
     {
-        return services.AddSelfHostedDurableTaskHub(orchestrationService, orchestrationService);
+        return services.AddSelfHostedDurableTaskHub((_) => orchestrationService, (_) => orchestrationService);
     }
 
-    public static IServiceCollection AddSelfHostedDurableTaskHub(
+    public static IServiceCollection AddSelfHostedDurableTaskHub<TIOrchestrationService>(
+       this IServiceCollection services,
+       Func<IServiceProvider, TIOrchestrationService> orchestrationServiceFactory)
+       where TIOrchestrationService : IOrchestrationService, IOrchestrationServiceClient
+    {
+        return services.AddSelfHostedDurableTaskHub(orchestrationServiceFactory, orchestrationServiceFactory);
+    }
+
+    public static IServiceCollection AddSelfHostedDurableTaskHub<TIOrchestrationService, TIOrchestrationServiceClient>(
         this IServiceCollection services,
-        IOrchestrationService orchestrationService,
-        IOrchestrationServiceClient orchestrationServiceClient)
+        Func<IServiceProvider, TIOrchestrationService> orchestrationServiceFactory,
+        Func<IServiceProvider, TIOrchestrationServiceClient> orchestrationServiceClientFactory)
+        where TIOrchestrationService : IOrchestrationService
+        where TIOrchestrationServiceClient : IOrchestrationServiceClient
     {
         ArgumentNullException.ThrowIfNull(services, nameof(services));
-        ArgumentNullException.ThrowIfNull(orchestrationService, nameof(orchestrationService));
-        ArgumentNullException.ThrowIfNull(orchestrationServiceClient, nameof(orchestrationServiceClient));
+        ArgumentNullException.ThrowIfNull(orchestrationServiceFactory, nameof(orchestrationServiceFactory));
+        ArgumentNullException.ThrowIfNull(orchestrationServiceClientFactory, nameof(orchestrationServiceClientFactory));
 
         return services
             .AddSingleton<IWorkerDispatcherMiddleware, WorkerDispatcherMiddleware>()
             .AddSingleton((sp) => new TaskHubClient(
-                orchestrationServiceClient,
+                orchestrationServiceClientFactory(sp),
                 dataConverter: BuildDataConverter(sp),
                 loggerFactory: sp.GetService<ILoggerFactory>())
             )
             .AddSingleton((sp) => new TaskHubWorker(
-                orchestrationService,
+                orchestrationServiceFactory(sp),
                 orchestrationObjectManager: new ShimOrchestrationObjectManager(),
                 activityObjectManager: new ShimActivityObjectManager(),
                 loggerFactory: sp.GetService<ILoggerFactory>())
