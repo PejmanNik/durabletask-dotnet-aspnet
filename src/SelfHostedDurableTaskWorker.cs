@@ -1,7 +1,6 @@
 ﻿using DurableTask.Core;
 using Microsoft.DurableTask.Worker;
 using Microsoft.DurableTask.Worker.Hosting;
-using Microsoft.DurableTask.Worker.Shims;
 
 namespace DurableTask.AspNetCore;
 
@@ -14,7 +13,7 @@ internal sealed class SelfHostedDurableTaskWorker : DurableTaskWorker
         string? name,
         IDurableTaskFactory factory,
         TaskHubWorker taskHubWorker,
-        IWorkerDispatcherMiddleware middleware) 
+        IWorkerDispatcherMiddleware middleware)
         : base(name, factory)
     {
         worker = taskHubWorker;
