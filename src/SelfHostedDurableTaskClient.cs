@@ -102,16 +102,27 @@ internal sealed class SelfHostedDurableTaskClient : DurableTaskClient
     public override async Task<string> ScheduleNewOrchestrationInstanceAsync(TaskName orchestratorName, object? input = null, StartOrchestrationOptions? options = null, CancellationToken cancellation = default)
     {
         cancellation.ThrowIfCancellationRequested();
+
+        var version = string.Empty;
+        if (options?.Version is { } v)
+        {
+            version = v;
+        }
+        else if (!string.IsNullOrEmpty(this.options.DefaultVersion))
+        {
+            version = this.options.DefaultVersion;
+        }
+
         var instance = await client.CreateOrchestrationInstanceAsync(
             orchestratorName.Name,
-            orchestratorName.Version,
+            version,
             options?.InstanceId ?? Guid.NewGuid().ToString("N"),
             input,
-            null,
+            options?.Tags.ToDictionary(),
             null,
             options?.StartAt?.UtcDateTime ?? DateTime.UtcNow
             );
-
+   
         return instance.InstanceId;
     }
 

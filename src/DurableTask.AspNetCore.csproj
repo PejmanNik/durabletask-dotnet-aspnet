@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Copyright>Pejman Nikram</Copyright>
@@ -14,7 +14,7 @@
 		<RepositoryUrl>https://github.com/PejmanNik/durabletask-dotnet-aspnet</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
-		<Version>0.0.3</Version>
+		<Version>0.0.4</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -25,9 +25,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.DurableTask.Client" Version="1.8.1" />
-		<PackageReference Include="Microsoft.DurableTask.Client.Grpc" Version="1.8.1" />
-		<PackageReference Include="Microsoft.DurableTask.Worker" Version="1.8.1" />
+		<PackageReference Include="Microsoft.DurableTask.Client" Version="1.17.1" />
+		<PackageReference Include="Microsoft.DurableTask.Client.Grpc" Version="1.17.1" />
+		<PackageReference Include="Microsoft.DurableTask.Worker" Version="1.17.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="DurableTask.AspNetCore.Tests" />
