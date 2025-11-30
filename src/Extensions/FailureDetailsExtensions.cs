@@ -16,6 +16,7 @@ internal static class FailureDetailsExtensions
             failureDetails.ErrorType,
             failureDetails.ErrorMessage,
             failureDetails.StackTrace,
-            ToTaskFailureDetails(failureDetails.InnerFailure));
+            ToTaskFailureDetails(failureDetails.InnerFailure),
+            failureDetails.Properties);
     }
 }
