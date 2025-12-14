@@ -1,31 +1,43 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
+using Microsoft.DurableTask.Entities;
 
 namespace WebAPI;
 
 internal static class BurgerApi
 {
+    public const string StaticKey = "key1";
+
     public static void MapBurgerApi(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/orders", async (GrillBurgerInput input, [FromServices] DurableTaskClient client) =>
-        {
-            var id = await client.ScheduleNewGrillBurgerOrchestratorInstanceAsync(input);
-            return new
             {
-                id
-            };
-        })
-        .WithName("OrderBurger");
+                var id = await client.ScheduleNewGrillBurgerOrchestratorInstanceAsync(input);
+                return new
+                {
+                    id
+                };
+            })
+            .WithName("OrderBurger");
 
-        endpoints.MapGet("/orders", async (string id, [FromServices] DurableTaskClient client) =>
-        {
-            return await client.GetInstanceAsync(id);
-        })
-        .WithName("BurgerStatus");
+        endpoints.MapGet("/orders",
+                async (string id, [FromServices] DurableTaskClient client) =>
+                {
+                    return await client.GetInstanceAsync(id);
+                })
+            .WithName("BurgerStatus");
+
+        endpoints.MapGet("/orders/summary", async ([FromServices] DurableTaskClient client) =>
+            {
+                var entity =
+                    await client.Entities.GetEntityAsync(new EntityInstanceId(nameof(BurgerEntity), StaticKey));
+
+                return entity;
+            })
+            .WithName("BurgerSummary");
     }
 }
-
 
 public class GrillBurgerInput(string patty, string bun)
 {
@@ -42,6 +54,10 @@ internal sealed class GrillBurgerOrchestrator : TaskOrchestrator<GrillBurgerInpu
     {
         var logger = context.CreateReplaySafeLogger(nameof(GrillBurgerOrchestrator));
         logger.LogInformation("Orchestrator started");
+
+        await context.Entities.SignalEntityAsync(
+            new EntityInstanceId(nameof(BurgerEntity), BurgerApi.StaticKey),
+            nameof(BurgerEntity.Add), 1);
 
         // 1. Grill the Patty in parallel with Toasting the Bun
         var tasks = new List<Task<string>>
@@ -117,5 +133,14 @@ internal sealed class AssembleBurgerActivity : TaskActivity<IEnumerable<string>,
         _logger.LogInformation("Assembling burger...");
         await Task.Delay(TimeSpan.FromSeconds(1)); // Simulate assembly time
         return $"Burger with {string.Join(',', inputs)}";
+    }
+}
+
+[DurableTask]
+public sealed class BurgerEntity : TaskEntity<int>
+{
+    public void Add(int amount)
+    {
+        State += amount;
     }
 }

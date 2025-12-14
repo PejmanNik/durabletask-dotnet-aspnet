@@ -14,7 +14,7 @@
 		<RepositoryUrl>https://github.com/PejmanNik/durabletask-dotnet-aspnet</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryType>git</RepositoryType>
-		<Version>0.0.4</Version>
+		<Version>0.0.5</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -25,9 +25,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.DurableTask.Client" Version="1.17.1" />
-		<PackageReference Include="Microsoft.DurableTask.Client.Grpc" Version="1.17.1" />
-		<PackageReference Include="Microsoft.DurableTask.Worker" Version="1.17.1" />
+		<PackageReference Include="Microsoft.DurableTask.Client" Version="1.18.0" />
+		<PackageReference Include="Microsoft.DurableTask.Client.Grpc" Version="1.18.0" />
+		<PackageReference Include="Microsoft.DurableTask.Worker" Version="1.18.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="DurableTask.AspNetCore.Tests" />
