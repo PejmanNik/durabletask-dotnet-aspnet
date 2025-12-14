@@ -8,20 +8,27 @@ using WebAPI;
 var builder = WebApplication.CreateBuilder(args);
 
 var durableTaskStorage = builder.Configuration.GetValue<string>("DurableTaskStorage")
-    ?? throw new InvalidOperationException("Connection string for 'DurableTaskStorage' not found.");
+                         ?? throw new InvalidOperationException(
+                             "Connection string for 'DurableTaskStorage' not found.");
 
-var orchestrationServiceAndClient = new AzureStorageOrchestrationService(new()
+var orchestrationServiceAndClient = new AzureStorageOrchestrationService(new AzureStorageOrchestrationServiceSettings
 {
     StorageAccountClientProvider = new StorageAccountClientProvider(durableTaskStorage),
     TaskHubName = "hub1",
     WorkerId = "worker1",
+    UseSeparateQueueForEntityWorkItems = true
 });
 
 builder.Services.AddSelfHostedDurableTaskHub(orchestrationServiceAndClient);
 builder.Services.AddDurableTaskWorker(builder =>
 {
     builder
-        .AddTasks(r => r.AddAllGeneratedTasks())
+        .AddTasks(r =>
+            {
+                r.AddAllGeneratedTasks();
+                r.AddEntity<BurgerEntity>();
+            }
+        )
         .UseSelfHosted();
 });
 
@@ -33,4 +40,3 @@ app.UseHttpsRedirection();
 
 app.MapBurgerApi();
 app.Run();
-

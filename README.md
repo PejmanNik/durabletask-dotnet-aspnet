@@ -6,6 +6,8 @@ Durable Task functionality directly into your Asp .Net Core project.
 
 ## Usage
 
+To use this project effectively, you should already understand the concepts of the Microsoft Durable Task Framework and how to work with it. Microsoft provides comprehensive documentation that covers these topics in detail.
+
 Install the [![NuGet version (Sisu.DurableTask.AspNetCore)](https://img.shields.io/nuget/vpre/Sisu.DurableTask.AspNetCore)](https://www.nuget.org/packages/Sisu.DurableTask.AspNetCore/) package.
 
 ```
@@ -51,8 +53,48 @@ builder.Services.AddDurableTaskClient(b => b.UseSelfHosted());
 
 Now you can inject the `DurableTaskClient` into your classes to schedule or manage durable tasks. For more detailed examples, check out the samples folder.
 
-## Under the Hood
+### Durable Entities
 
+To use durable entities, follow these steps:
+
+1. **Manually register entities**: Add your entity to the `DurableTaskWorker` using `AddTasks()`. Note that automatic registration via `AddAllGeneratedTasks()` doesn't currently include entities (this will be addressed in a future version).
+
+2. **Enable entity work item separation**: Configure `UseSeparateQueueForEntityWorkItems = true` in your `OrchestrationService` settings.
+
+```csharp
+
+// Configure the orchestration service
+var orchestrationServiceAndClient = new AzureStorageOrchestrationService(new()
+{
+    ...
+    UseSeparateQueueForEntityWorkItems = true
+});
+
+// Register the worker with manual entity registration
+builder.Services.AddDurableTaskWorker(builder =>
+{
+    builder
+        .AddTasks(r =>
+        {
+            r.AddAllGeneratedTasks();
+            r.AddTask<MyCounterEntity>();  // Manually add your entity
+        })
+        .UseSelfHosted();
+});
+
+[DurableTask]
+public sealed class MyCounterEntity : TaskEntity<int>
+{
+    public void Add(int amount)
+    {
+        State += amount;
+    }
+}
+```
+
+For more detailed examples, check out the samples folder.
+
+## Under the Hood
 
 The [durabletask-dotnet](https://github.com/microsoft/durabletask-dotnet) project is built on top of 
 the [Durable Task Framework](https://github.com/Azure/durabletask?tab=readme-ov-file#supported-persistance-stores). 
@@ -63,4 +105,5 @@ so it use gRPC to communicate with the sidecar. In this project the gRPC communi
 is replaced with a direct call to the `DurableTaskHub` service that runs in the same process.
 
 ## Acknowledgements
-•	[durabletask-dotnet](https://github.com/microsoft/durabletask-dotnet) for providing the core Durable Task framework.
+
+[durabletask-dotnet](https://github.com/microsoft/durabletask-dotnet) for providing the core Durable Task framework.
