@@ -23,12 +23,7 @@ builder.Services.AddSelfHostedDurableTaskHub(orchestrationServiceAndClient);
 builder.Services.AddDurableTaskWorker(builder =>
 {
     builder
-        .AddTasks(r =>
-            {
-                r.AddAllGeneratedTasks();
-                r.AddEntity<BurgerEntity>();
-            }
-        )
+        .AddTasks(r => r.AddAllGeneratedTasks())
         .UseSelfHosted();
 });
 

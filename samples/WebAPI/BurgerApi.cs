@@ -39,11 +39,7 @@ internal static class BurgerApi
     }
 }
 
-public class GrillBurgerInput(string patty, string bun)
-{
-    public string Patty { get; } = patty;
-    public string Bun { get; } = bun;
-}
+public record GrillBurgerInput(string Patty, string Bun);
 
 [DurableTask]
 internal sealed class GrillBurgerOrchestrator : TaskOrchestrator<GrillBurgerInput, string>
@@ -77,60 +73,40 @@ internal sealed class GrillBurgerOrchestrator : TaskOrchestrator<GrillBurgerInpu
 }
 
 [DurableTask]
-internal sealed class GrillPattyActivity : TaskActivity<string, string>
+internal sealed class GrillPattyActivity(ILogger<GrillPattyActivity> logger) : TaskActivity<string, string>
 {
-    private readonly ILogger<GrillPattyActivity> _logger;
-
-    public GrillPattyActivity(ILogger<GrillPattyActivity> logger)
-    {
-        _logger = logger;
-    }
-
     public override async Task<string> RunAsync(
         TaskActivityContext context,
         string patty)
     {
-        _logger.LogInformation("Grilling patty...");
+        logger.LogInformation("Grilling patty...");
         await Task.Delay(TimeSpan.FromSeconds(3)); // Simulate grilling time
         return $"{patty} (Grilled)";
     }
 }
 
 [DurableTask]
-internal sealed class ToastBunActivity : TaskActivity<string, string>
+internal sealed class ToastBunActivity(ILogger<ToastBunActivity> logger) : TaskActivity<string, string>
 {
-    private readonly ILogger<ToastBunActivity> _logger;
-
-    public ToastBunActivity(ILogger<ToastBunActivity> logger)
-    {
-        _logger = logger;
-    }
-
     public override async Task<string> RunAsync(
         TaskActivityContext context,
         string bun)
     {
-        _logger.LogInformation("Toasting bun...");
+        logger.LogInformation("Toasting bun...");
         await Task.Delay(TimeSpan.FromSeconds(1)); // Simulate toasting time
         return $"{bun} (Toasted)";
     }
 }
 
 [DurableTask]
-internal sealed class AssembleBurgerActivity : TaskActivity<IEnumerable<string>, string>
+internal sealed class AssembleBurgerActivity(ILogger<AssembleBurgerActivity> logger)
+    : TaskActivity<IEnumerable<string>, string>
 {
-    private readonly ILogger<AssembleBurgerActivity> _logger;
-
-    public AssembleBurgerActivity(ILogger<AssembleBurgerActivity> logger)
-    {
-        _logger = logger;
-    }
-
     public override async Task<string> RunAsync(
         TaskActivityContext context,
         IEnumerable<string> inputs)
     {
-        _logger.LogInformation("Assembling burger...");
+        logger.LogInformation("Assembling burger...");
         await Task.Delay(TimeSpan.FromSeconds(1)); // Simulate assembly time
         return $"Burger with {string.Join(',', inputs)}";
     }

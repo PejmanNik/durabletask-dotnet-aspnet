@@ -55,11 +55,7 @@ Now you can inject the `DurableTaskClient` into your classes to schedule or mana
 
 ### Durable Entities
 
-To use durable entities, follow these steps:
-
-1. **Manually register entities**: Add your entity to the `DurableTaskWorker` using `AddTasks()`. Note that automatic registration via `AddAllGeneratedTasks()` doesn't currently include entities (this will be addressed in a future version).
-
-2. **Enable entity work item separation**: Configure `UseSeparateQueueForEntityWorkItems = true` in your `OrchestrationService` settings.
+To use durable entities, **Enable entity work item separation** by setting `UseSeparateQueueForEntityWorkItems = true` in your `OrchestrationService`.
 
 ```csharp
 
@@ -70,15 +66,11 @@ var orchestrationServiceAndClient = new AzureStorageOrchestrationService(new()
     UseSeparateQueueForEntityWorkItems = true
 });
 
-// Register the worker with manual entity registration
+// Register the worker and tasks
 builder.Services.AddDurableTaskWorker(builder =>
 {
     builder
-        .AddTasks(r =>
-        {
-            r.AddAllGeneratedTasks();
-            r.AddTask<MyCounterEntity>();  // Manually add your entity
-        })
+        .AddTasks(r => r.AddAllGeneratedTasks())
         .UseSelfHosted();
 });
 
